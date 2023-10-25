@@ -3,10 +3,12 @@ const mongoose = require('mongoose');
 const bodyParser = require('body-parser');
 const bcrypt = require('bcrypt');
 const {sign} = require("jsonwebtoken");
+const cors = require('cors');
 
 
 const app = express();
 app.use(bodyParser.json());
+app.use(cors());
 
 // Connect to MongoDB Atlas
 mongoose.connect('mongodb+srv://salmaanakhtar:salmaanakhtar@swt.qpmzwzp.mongodb.net/swt?retryWrites=true&w=majority', {
