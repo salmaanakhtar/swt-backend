@@ -27,7 +27,21 @@ const userSchema = new mongoose.Schema({
     password: String
 });
 
+const tripSchema = new mongoose.Schema({
+    tripID: { type: Number, unique: true },
+    userID: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+    destination: String,
+    startDate: Date,
+    endDate: Date,
+    purpose: String,
+    status: { type: String, enum: ['planned', 'ongoing', 'completed'] }
+});
+
+
+
 const User = mongoose.model('User', userSchema);
+const Trip = mongoose.model('Trip', tripSchema);
+
 
 // Signup endpoint
 app.post('/signup', async (req, res) => {
@@ -80,6 +94,64 @@ app.post('/login', async (req, res) => {
     } catch (error) {
         console.log(error);
         res.status(500).json({ error: 'Internal server error' });
+    }
+});
+
+// Get all tasks
+app.get('/api/tasks', async (req, res) => {
+    try {
+        const tasks = await Trip.find();
+        res.json(tasks);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// Create a new task
+app.post('/api/tasks', async (req, res) => {
+    try {
+        const lastTask = await Trip.findOne().sort({ tripID: -1 });
+        const newTask = new Trip({
+            tripID: lastTask ? lastTask.tripID + 1 : 1,
+            userID: req.body.userID,
+            destination: req.body.destination,
+            startDate: req.body.startDate,
+            endDate: req.body.endDate,
+            purpose: req.body.purpose,
+            status: req.body.status
+        });
+        const savedTask = await newTask.save();
+        res.json(savedTask);
+    } catch (error) {
+        res.status(400).json({ error: error.message });
+    }
+});
+
+// Delete a task by ID
+app.delete('/api/tasks/:id', async (req, res) => {
+    try {
+        const deletedTask = await Trip.findByIdAndDelete(req.params.id);
+        if (deletedTask) {
+            res.json({ message: 'Task deleted successfully' });
+        } else {
+            res.status(404).json({ error: 'Task not found' });
+        }
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// Edit a task by ID
+app.put('/api/tasks/:id', async (req, res) => {
+    try {
+        const updatedTask = await Trip.findByIdAndUpdate(req.params.id, req.body, { new: true });
+        if (updatedTask) {
+            res.json(updatedTask);
+        } else {
+            res.status(404).json({ error: 'Task not found' });
+        }
+    } catch (error) {
+        res.status(400).json({ error: error.message });
     }
 });
 
