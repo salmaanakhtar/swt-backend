@@ -33,6 +33,12 @@ const User = mongoose.model('User', userSchema);
 app.post('/signup', async (req, res) => {
     const { firstName, lastName, username, email, password } = req.body;
     try {
+        // Check if a user with the same username or email already exists
+        const existingUser = await User.findOne({ $or: [{ username }, { email }] });
+        if (existingUser) {
+            return res.status(400).json({ error: 'Username or email already exists' });
+        }
+
         // Get the current maximum userID from the database
         const lastUser = await User.findOne().sort({ userID: -1 });
         const userID = lastUser ? lastUser.userID + 1 : 1;
@@ -76,7 +82,6 @@ app.post('/login', async (req, res) => {
         res.status(500).json({ error: 'Internal server error' });
     }
 });
-
 
 
 // Start the Express server
