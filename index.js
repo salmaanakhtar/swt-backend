@@ -27,20 +27,22 @@ const userSchema = new mongoose.Schema({
     password: String
 });
 
-const tripSchema = new mongoose.Schema({
-    tripID: { type: Number, unique: true },
-    userID: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
-    destination: String,
-    startDate: Date,
-    endDate: Date,
-    purpose: String,
-    status: { type: String, enum: ['planned', 'ongoing', 'completed'] }
+const User = mongoose.model('User', userSchema);
+
+const taskSchema = new mongoose.Schema({
+    taskID: { type: Number, unique: true },
+    userID: Number,
+    title: String,
+    description: String,
+    deadline: Date,
+    status: String // Removed the enum constraint
 });
 
+const Task = mongoose.model('Task', taskSchema);
 
 
-const User = mongoose.model('User', userSchema);
-const Trip = mongoose.model('Trip', tripSchema);
+
+const Task = mongoose.model('Task', taskSchema);
 
 
 // Signup endpoint
@@ -97,6 +99,25 @@ app.post('/login', async (req, res) => {
     }
 });
 
+// Create Task endpoint
+app.post('/tasks', async (req, res) => {
+    const { userID, title, description, deadline, status } = req.body;
+    try {
+        // Get the current maximum taskID from the database
+        const lastTask = await Task.findOne().sort({ taskID: -1 });
+        const taskID = lastTask ? lastTask.taskID + 1 : 1;
+
+        // Create a new task with the incremented taskID and user ID
+        const newTask = new Task({ taskID, userID, title, description, deadline, status });
+        await newTask.save();
+
+        return res.status(201).json({ message: 'Task created successfully', taskID });
+
+    } catch (error) {
+        console.log(error);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+});
 
 // Start the Express server
 const PORT = process.env.PORT || 3000;
