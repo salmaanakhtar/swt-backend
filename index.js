@@ -114,6 +114,20 @@ app.post('/tasks', async (req, res) => {
     }
 });
 
+// Get tasks by userID endpoint
+app.get('/tasks/:userID', async (req, res) => {
+    const { userID } = req.params;
+    try {
+        // Find tasks based on the provided userID
+        const tasks = await Task.find({ userID: parseInt(userID) });
+
+        return res.status(200).json(tasks);
+    } catch (error) {
+        console.log(error);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+});
+
 // Start the Express server
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
