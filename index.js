@@ -128,6 +128,48 @@ app.get('/tasks/:userID', async (req, res) => {
     }
 });
 
+// Edit Task endpoint
+app.put('/tasks/:taskID', async (req, res) => {
+    const { taskID } = req.params;
+    const { title, description, deadline, status } = req.body;
+    try {
+        // Find the task by taskID and update its properties
+        const updatedTask = await Task.findOneAndUpdate(
+            { taskID: parseInt(taskID) },
+            { title, description, deadline, status },
+            { new: true } // Return the updated task
+        );
+
+        if (!updatedTask) {
+            return res.status(404).json({ error: 'Task not found' });
+        }
+
+        return res.status(200).json({ message: 'Task updated successfully', task: updatedTask });
+    } catch (error) {
+        console.log(error);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+});
+
+// Delete Task endpoint
+app.delete('/tasks/:taskID', async (req, res) => {
+    const { taskID } = req.params;
+    try {
+        // Find the task by taskID and delete it
+        const deletedTask = await Task.findOneAndDelete({ taskID: parseInt(taskID) });
+
+        if (!deletedTask) {
+            return res.status(404).json({ error: 'Task not found' });
+        }
+
+        return res.status(200).json({ message: 'Task deleted successfully', task: deletedTask });
+    } catch (error) {
+        console.log(error);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+});
+
+
 // Start the Express server
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
