@@ -40,11 +40,6 @@ const taskSchema = new mongoose.Schema({
 
 const Task = mongoose.model('Task', taskSchema);
 
-
-
-const Task = mongoose.model('Task', taskSchema);
-
-
 // Signup endpoint
 app.post('/signup', async (req, res) => {
     const { firstName, lastName, username, email, password } = req.body;
