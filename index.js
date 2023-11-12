@@ -40,6 +40,18 @@ const taskSchema = new mongoose.Schema({
 
 const Task = mongoose.model('Task', taskSchema);
 
+const subTaskSchema = new mongoose.Schema({
+    subTaskID: { type: Number, unique: true },
+    taskID: Number,
+    title: String,
+    description: String,
+    deadline: Date,
+    status: String
+});
+
+const SubTask = mongoose.model('SubTask', subTaskSchema);
+
+
 // Signup endpoint
 app.post('/signup', async (req, res) => {A
     const { firstName, lastName, username, email, password } = req.body;
@@ -163,6 +175,81 @@ app.delete('/tasks/:taskID', async (req, res) => {
         }
 
         return res.status(200).json({ message: 'Task deleted successfully', task: deletedTask });
+    } catch (error) {
+        console.log(error);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+});
+
+// Create Subtask endpoint
+app.post('/subtasks', async (req, res) => {
+    const { taskID, title, description, deadline, status } = req.body;
+    try {
+        // Get the current maximum subTaskID from the database
+        const lastSubTask = await SubTask.findOne().sort({ subTaskID: -1 });
+        const subTaskID = lastSubTask ? lastSubTask.subTaskID + 1 : 1;
+
+        // Create a new subtask with the incremented subTaskID and task ID
+        const newSubTask = new SubTask({ subTaskID, taskID, title, description, deadline, status });
+        await newSubTask.save();
+
+        return res.status(201).json({ message: 'Subtask created successfully', subTaskID });
+
+    } catch (error) {
+        console.log(error);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+});
+
+// Get subtasks by taskID endpoint
+app.get('/subtasks/:taskID', async (req, res) => {
+    const { taskID } = req.params;
+    try {
+        // Find subtasks based on the provided taskID
+        const subtasks = await SubTask.find({ taskID: parseInt(taskID) });
+
+        return res.status(200).json(subtasks);
+    } catch (error) {
+        console.log(error);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+});
+
+// Edit Subtask endpoint
+app.put('/subtasks/:subTaskID', async (req, res) => {
+    const { subTaskID } = req.params;
+    const { title, description, deadline, status } = req.body;
+    try {
+        // Find the subtask by subTaskID and update its properties
+        const updatedSubTask = await SubTask.findOneAndUpdate(
+            { subTaskID: parseInt(subTaskID) },
+            { title, description, deadline, status },
+            { new: true } // Return the updated subtask
+        );
+
+        if (!updatedSubTask) {
+            return res.status(404).json({ error: 'Subtask not found' });
+        }
+
+        return res.status(200).json({ message: 'Subtask updated successfully', subTask: updatedSubTask });
+    } catch (error) {
+        console.log(error);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+});
+
+// Delete Subtask endpoint
+app.delete('/subtasks/:subTaskID', async (req, res) => {
+    const { subTaskID } = req.params;
+    try {
+        // Find the subtask by subTaskID and delete it
+        const deletedSubTask = await SubTask.findOneAndDelete({ subTaskID: parseInt(subTaskID) });
+
+        if (!deletedSubTask) {
+            return res.status(404).json({ error: 'Subtask not found' });
+        }
+
+        return res.status(200).json({ message: 'Subtask deleted successfully', subTask: deletedSubTask });
     } catch (error) {
         console.log(error);
         res.status(500).json({ error: 'Internal server error' });
