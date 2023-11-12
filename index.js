@@ -29,6 +29,7 @@ const userSchema = new mongoose.Schema({
 
 const User = mongoose.model('User', userSchema);
 
+// Define mongoose schema and model for Task
 const taskSchema = new mongoose.Schema({
     taskID: { type: Number, unique: true },
     userID: Number,
@@ -40,17 +41,17 @@ const taskSchema = new mongoose.Schema({
 
 const Task = mongoose.model('Task', taskSchema);
 
-const subTaskSchema = new mongoose.Schema({
-    subTaskID: { type: Number, unique: true },
+// Define mongoose schema and model for Subtask
+const subtaskSchema = new mongoose.Schema({
+    subtaskID: { type: Number, unique: true },
     taskID: Number,
     title: String,
     description: String,
     deadline: Date,
-    status: String
+    status: String // You can add other fields as needed
 });
 
-const SubTask = mongoose.model('SubTask', subTaskSchema);
-
+const Subtask = mongoose.model('Subtask', subtaskSchema);
 
 // Signup endpoint
 app.post('/signup', async (req, res) => {A
@@ -185,15 +186,15 @@ app.delete('/tasks/:taskID', async (req, res) => {
 app.post('/subtasks', async (req, res) => {
     const { taskID, title, description, deadline, status } = req.body;
     try {
-        // Get the current maximum subTaskID from the database
-        const lastSubTask = await SubTask.findOne().sort({ subTaskID: -1 });
-        const subTaskID = lastSubTask ? lastSubTask.subTaskID + 1 : 1;
+        // Get the current maximum subtaskID from the database
+        const lastSubtask = await Subtask.findOne().sort({ subtaskID: -1 });
+        const subtaskID = lastSubtask ? lastSubtask.subtaskID + 1 : 1;
 
-        // Create a new subtask with the incremented subTaskID and task ID
-        const newSubTask = new SubTask({ subTaskID, taskID, title, description, deadline, status });
-        await newSubTask.save();
+        // Create a new subtask with the incremented subtaskID and task ID
+        const newSubtask = new Subtask({ subtaskID, taskID, title, description, deadline, status });
+        await newSubtask.save();
 
-        return res.status(201).json({ message: 'Subtask created successfully', subTaskID });
+        return res.status(201).json({ message: 'Subtask created successfully', subtaskID });
 
     } catch (error) {
         console.log(error);
@@ -206,7 +207,7 @@ app.get('/subtasks/:taskID', async (req, res) => {
     const { taskID } = req.params;
     try {
         // Find subtasks based on the provided taskID
-        const subtasks = await SubTask.find({ taskID: parseInt(taskID) });
+        const subtasks = await Subtask.find({ taskID: parseInt(taskID) });
 
         return res.status(200).json(subtasks);
     } catch (error) {
@@ -216,22 +217,22 @@ app.get('/subtasks/:taskID', async (req, res) => {
 });
 
 // Edit Subtask endpoint
-app.put('/subtasks/:subTaskID', async (req, res) => {
-    const { subTaskID } = req.params;
+app.put('/subtasks/:subtaskID', async (req, res) => {
+    const { subtaskID } = req.params;
     const { title, description, deadline, status } = req.body;
     try {
-        // Find the subtask by subTaskID and update its properties
-        const updatedSubTask = await SubTask.findOneAndUpdate(
-            { subTaskID: parseInt(subTaskID) },
+        // Find the subtask by subtaskID and update its properties
+        const updatedSubtask = await Subtask.findOneAndUpdate(
+            { subtaskID: parseInt(subtaskID) },
             { title, description, deadline, status },
             { new: true } // Return the updated subtask
         );
 
-        if (!updatedSubTask) {
+        if (!updatedSubtask) {
             return res.status(404).json({ error: 'Subtask not found' });
         }
 
-        return res.status(200).json({ message: 'Subtask updated successfully', subTask: updatedSubTask });
+        return res.status(200).json({ message: 'Subtask updated successfully', subtask: updatedSubtask });
     } catch (error) {
         console.log(error);
         res.status(500).json({ error: 'Internal server error' });
@@ -239,24 +240,22 @@ app.put('/subtasks/:subTaskID', async (req, res) => {
 });
 
 // Delete Subtask endpoint
-app.delete('/subtasks/:subTaskID', async (req, res) => {
-    const { subTaskID } = req.params;
+app.delete('/subtasks/:subtaskID', async (req, res) => {
+    const { subtaskID } = req.params;
     try {
-        // Find the subtask by subTaskID and delete it
-        const deletedSubTask = await SubTask.findOneAndDelete({ subTaskID: parseInt(subTaskID) });
+        // Find the subtask by subtaskID and delete it
+        const deletedSubtask = await Subtask.findOneAndDelete({ subtaskID: parseInt(subtaskID) });
 
-        if (!deletedSubTask) {
+        if (!deletedSubtask) {
             return res.status(404).json({ error: 'Subtask not found' });
         }
 
-        return res.status(200).json({ message: 'Subtask deleted successfully', subTask: deletedSubTask });
+        return res.status(200).json({ message: 'Subtask deleted successfully', subtask: deletedSubtask });
     } catch (error) {
         console.log(error);
         res.status(500).json({ error: 'Internal server error' });
     }
 });
-
-
 // Start the Express server
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
