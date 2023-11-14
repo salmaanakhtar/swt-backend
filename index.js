@@ -43,7 +43,7 @@ const Task = mongoose.model('Task', taskSchema);
 
 
 // Signup endpoint
-app.post('/signup', async (req, res) => {A
+app.post('/signup', async (req, res) => {
     const { firstName, lastName, username, email, password } = req.body;
     try {
         // Check if a user with the same username or email already exists
